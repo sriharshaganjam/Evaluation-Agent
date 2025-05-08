@@ -59,10 +59,10 @@ Response Text: "{response}"
 
 Evaluate how well the response captures the meaning and important points of the source.
 Give a score from 0 to 100.
-If the response is an *exact* copy of the source text, the score should be 100.
+If the response is an *exact* copy of the source text, the score should be 0 with a message stating to provide an original answer and not a replication.
 If there are any points missing from the response, list them.
 If the meaning is incorrect or reversed, state that clearly.
-If the answer contains less than 10 words state that the answer provided is not adequate to explain the source.
+If the answer contains less than 10 words state that the answer provided is not adequate to explain the source and provide a score of 0.
 Finally, provide a short explanation on what could be improved in the answer to achieve a higher score .
 
 Return your answer as JSON in the format:
