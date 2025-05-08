@@ -1,0 +1,5 @@
+streamlit
+sentence-transformers
+openai
+torch  # Let's keep the latest stable version for now
+
