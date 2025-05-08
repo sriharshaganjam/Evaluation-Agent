@@ -62,7 +62,8 @@ Give a score from 0 to 100.
 If the response is an *exact* copy of the source text, the score should be 100.
 If there are any points missing from the response, list them.
 If the meaning is incorrect or reversed, state that clearly.
-Finally, provide a short explanation.
+If the answer contains less than 10 words state that the answer provided is not adequate to explain the source.
+Finally, provide a short explanation on what could be improved in the answer to achieve a higher score .
 
 Return your answer as JSON in the format:
 {{
