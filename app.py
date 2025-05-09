@@ -2,8 +2,8 @@ from openai import OpenAI
 import streamlit as st
 from sentence_transformers import SentenceTransformer, util
 import json
-from openai import OpenAI
 import torch
+import re  # Import the regular expression library
 
 # --- Setup and Configuration ---
 st.title("🧠 Response Evaluation Agent")
@@ -54,7 +54,34 @@ def evaluate_with_mistral(source, response, openai_client):
     if len(response.split()) < 10:
         return {"score": 0, "explanation": "The provided answer is too short and does not adequately explain the source. Please provide a more detailed response."}
 
-    prompt = f"""... (Your prompt) ..."""
+    prompt = f"""
+You are a strict evaluation agent. Your sole task is to evaluate the "Response Text" based on the "Source Text" provided below. You MUST adhere to the following instructions and return your answer strictly in the JSON format specified.
+
+Source Text: "{source}"
+Response Text: "{response}"
+
+Evaluation Criteria:
+1. Accuracy: How well does the response accurately capture the key information from the source text?
+2. Completeness: Does the response cover all the important points from the source text?
+3. Conciseness: Is the response concise and avoids unnecessary information?
+4. Originality: Is the response an original summary or is it an exact copy of the source?
+
+Scoring: Provide a score from 0 to 100.
+
+Specific Instructions:
+- If the response is an EXACT copy of the source text, the score MUST be 0, and the explanation MUST be: "The response is an exact copy of the source. Please provide an original summary."
+- Identify any key points from the source text that are missing in the response and include them in the "explanation".
+- If the response contains incorrect or misleading information, clearly state this in the "explanation" and deduct points from the score accordingly.
+- The "explanation" should be a concise summary of your evaluation, justifying the assigned score and suggesting areas for improvement.
+
+Return your evaluation as a JSON object with the following structure:
+{{
+  "score": <integer between 0 and 100>,
+  "explanation": "<string containing your evaluation>"
+}}
+
+Do not include any conversational elements, creative writing, or information outside the scope of evaluating the provided response against the source text. Your response MUST be valid JSON.
+"""
 
     try:
         chat_response = openai_client.chat.completions.create(
@@ -65,19 +92,15 @@ def evaluate_with_mistral(source, response, openai_client):
         )
         content = chat_response.choices[0].message.content.strip()
         try:
-            # Attempt to parse the response as JSON
-            evaluation = json.loads(content)  # Changed variable name for clarity
-            return evaluation # Return the parsed JSON directly
+            evaluation = json.loads(content)
+            return evaluation
         except json.JSONDecodeError:
-            # If JSON parsing fails, handle the non-JSON response more robustly
             if "Score:" in content:
                 try:
-                    # Extract score using a more reliable method (regular expressions)
-                    import re
                     match = re.search(r"Score:\s*(\d+)", content)
                     if match:
                         score = int(match.group(1))
-                        explanation = content.split("Score:")[0].strip() # Explanation before "Score:"
+                        explanation = content.split("Score:")[0].strip()
                         return {"score": score, "explanation": explanation}
                     else:
                         return {"score": 0, "explanation": f"Invalid response format: {content}"}
