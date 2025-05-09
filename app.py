@@ -51,6 +51,9 @@ def evaluate_with_mistral(source, response, openai_client):
     if not openai_client:
         return {"score": 0, "explanation": "Mistral API key is missing. Cannot evaluate."}
 
+    if len(response.split()) < 10:
+        return {"score": 0, "explanation": "The provided answer is too short and does not adequately explain the source. Please provide a more detailed response."}
+
     prompt = f"""
 You are an evaluation agent.
 
@@ -59,11 +62,13 @@ Response Text: "{response}"
 
 Evaluate how well the response captures the meaning and important points of the source.
 Give a score from 0 to 100.
-If the response is an *exact* copy of the source text, the score should be 0 with a message stating to provide an original answer and not a replication.
-If there are any points missing from the response, list them.
-If the meaning is incorrect or reversed, state that clearly.
-If the answer contains less than 10 words state that the answer provided is not adequate to explain the source and provide a score of 0.
-Finally, provide a short explanation on what could be improved in the answer to achieve a higher score .
+
+Constraints:
+- If the response is an *exact* copy of the source text, the score MUST be 0, and the explanation MUST state: "The response is an exact copy of the source. Please provide an original answer."
+- If there are any points missing from the response, list them in the explanation.
+- If the meaning is incorrect or reversed, state that clearly in the explanation.
+
+Finally, provide a short explanation on what could be improved in the answer to achieve a higher score.
 
 Return your answer as JSON in the format:
 {{
