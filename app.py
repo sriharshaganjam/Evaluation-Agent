@@ -54,28 +54,7 @@ def evaluate_with_mistral(source, response, openai_client):
     if len(response.split()) < 10:
         return {"score": 0, "explanation": "The provided answer is too short and does not adequately explain the source. Please provide a more detailed response."}
 
-    prompt = f"""
-You are an evaluation agent.
-
-Source Text: "{source}"
-Response Text: "{response}"
-
-Evaluate how well the response captures the meaning and important points of the source.
-Give a score from 0 to 100.
-
-Constraints:
-- If the response is an *exact* copy of the source text, the score MUST be 0, and the explanation MUST state: "The response is an exact copy of the source. Please provide an original answer."
-- If there are any points missing from the response, list them in the explanation.
-- If the meaning is incorrect or reversed, state that clearly in the explanation.
-
-Finally, provide a short explanation on what could be improved in the answer to achieve a higher score.
-
-Return your answer as JSON in the format:
-{{
-  "score": <number from 0 to 100>,
-  "explanation": "<explanation of the score>"
-}}
-"""
+    prompt = f"""... (Your prompt) ..."""
 
     try:
         chat_response = openai_client.chat.completions.create(
@@ -86,12 +65,22 @@ Return your answer as JSON in the format:
         )
         content = chat_response.choices[0].message.content.strip()
         try:
-            return json.loads(content)
+            # Attempt to parse the response as JSON
+            evaluation = json.loads(content)  # Changed variable name for clarity
+            return evaluation # Return the parsed JSON directly
         except json.JSONDecodeError:
+            # If JSON parsing fails, handle the non-JSON response more robustly
             if "Score:" in content:
                 try:
-                    score = int(content.split("Score:")[1].strip())
-                    return {"score": score, "explanation": "Evaluation failed to provide a full explanation."}
+                    # Extract score using a more reliable method (regular expressions)
+                    import re
+                    match = re.search(r"Score:\s*(\d+)", content)
+                    if match:
+                        score = int(match.group(1))
+                        explanation = content.split("Score:")[0].strip() # Explanation before "Score:"
+                        return {"score": score, "explanation": explanation}
+                    else:
+                        return {"score": 0, "explanation": f"Invalid response format: {content}"}
                 except ValueError:
                     return {"score": 0, "explanation": f"Invalid response format: {content}"}
             else:
