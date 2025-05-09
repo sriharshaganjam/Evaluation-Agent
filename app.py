@@ -54,6 +54,10 @@ def evaluate_with_mistral(source, response, openai_client):
     if len(response.split()) < 10:
         return {"score": 0, "explanation": "The provided answer is too short and does not adequately explain the source. Please provide a more detailed response."}
 
+    # Directly check for exact match in Python
+    if source.strip() == response.strip():
+        return {"score": 0, "explanation": "The response is an exact copy of the source. Please provide an original summary."}
+
     prompt = f"""
 You are a strict evaluation agent. Your sole task is to evaluate the "Response Text" based on the "Source Text" provided below. You MUST adhere to the following instructions and return your answer strictly in the JSON format specified.
 
@@ -64,12 +68,12 @@ Evaluation Criteria:
 1. Accuracy: How well does the response accurately capture the key information from the source text?
 2. Completeness: Does the response cover all the important points from the source text?
 3. Conciseness: Is the response concise and avoids unnecessary information?
-4. Originality: Is the response an original summary or is it an exact copy of the source?
+4. Originality: The response should be an original summary, not an exact copy.
 
 Scoring: Provide a score from 0 to 100.
 
 Specific Instructions:
-- If the response is an EXACT copy of the source text, the score MUST be 0, and the explanation MUST be: "The response is an exact copy of the source. Please provide an original summary."
+- If the response is an EXACT copy of the source text (or very nearly so), you MUST assign a score close to 0 and clearly state in the "explanation" that the response is not an original summary.
 - Identify any key points from the source text that are missing in the response and include them in the "explanation".
 - If the response contains incorrect or misleading information, clearly state this in the "explanation" and deduct points from the score accordingly.
 - The "explanation" should be a concise summary of your evaluation, justifying the assigned score and suggesting areas for improvement.
@@ -112,6 +116,7 @@ Do not include any conversational elements, creative writing, or information out
         return {"score": 0, "explanation": f"Mistral API Error: {str(e)}"}
     except Exception as e:
         return {"score": 0, "explanation": f"Error during evaluation: {str(e)}"}
+
 
 # --- Streamlit UI Elements ---
 # Predefined source text
