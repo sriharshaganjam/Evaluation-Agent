@@ -54,10 +54,6 @@ def evaluate_with_mistral(source, response, openai_client):
     if len(response.split()) < 10:
         return {"score": 0, "explanation": "The provided answer is too short and does not adequately explain the source. Please provide a more detailed response."}
 
-    # Directly check for exact match in Python
-    if source.strip() == response.strip():
-        return {"score": 0, "explanation": "The response is an exact copy of the source. Please provide an original summary."}
-
     prompt = f"""
 You are a strict evaluation agent. Your sole task is to evaluate the "Response Text" based on the "Source Text" provided below. You MUST adhere to the following instructions and return your answer strictly in the JSON format specified.
 
@@ -117,14 +113,13 @@ Do not include any conversational elements, creative writing, or information out
     except Exception as e:
         return {"score": 0, "explanation": f"Error during evaluation: {str(e)}"}
 
-
 # --- Streamlit UI Elements ---
 # Predefined source text
 default_source_text = """The Indus Water Treaty (IWT) is a water-distribution treaty between India and Pakistan, arranged and negotiated by the World Bank, to use the water available in the Indus River and its tributaries. It was signed in Karachi on 19 September 1960 by Indian prime minister Jawaharlal Nehru and Pakistani president Ayub Khan. On 23 April 2025, the Government of India suspended the treaty, citing national security concerns and alleging Pakistan’s support of state-sponsored terrorism."""
 
 # Text input fields
 source_text = st.text_area("✏️ Source Text (Rubric)", max_chars=800, height=200, value=default_source_text)
-response_text = st.text_area("📝 Response Text", max_chars=800, height=150, placeholder="Summarize the text provided in the Rubric above")
+response_text = st.text_area("📝 Response Text", max_chars=800, height=150, placeholder="Summarize the Indus Water Treaty from the information provided in the Rubric above")
 
 # Evaluation button
 if st.button("🔍 Evaluate"):
@@ -138,12 +133,17 @@ if st.button("🔍 Evaluate"):
         st.error("Mistral API client could not be initialized. Please check your API key in Streamlit secrets.")
     else:
         with st.spinner("Evaluating..."):
-            # Calculate cosine similarity
-            cosine_score = get_cosine_similarity(source_text, response_text, embedding_model)
-            # Evaluate with Mistral
-            mistral_eval = evaluate_with_mistral(source_text, response_text, client)
-            # Combine scores
-            final_score = round((0.7 * mistral_eval["score"]) + (0.3 * cosine_score), 2)
+            # Directly check for exact match
+            if source_text.strip() == response_text.strip():
+                final_score = 0.0
+                mistral_eval = {"score": 0, "explanation": "The response is an exact copy of the source. Please provide an original summary."}
+            else:
+                # Calculate cosine similarity only if it's not an exact copy
+                cosine_score = get_cosine_similarity(source_text, response_text, embedding_model)
+                # Evaluate with Mistral
+                mistral_eval = evaluate_with_mistral(source_text, response_text, client)
+                # Combine scores
+                final_score = round((0.7 * mistral_eval["score"]) + (0.3 * cosine_score), 2)
 
         # Display results
         st.subheader(f"✅ Final Score: {final_score}%")
