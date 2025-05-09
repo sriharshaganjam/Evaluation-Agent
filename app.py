@@ -119,7 +119,7 @@ default_source_text = """The Indus Water Treaty (IWT) is a water-distribution tr
 
 # Text input fields
 source_text = st.text_area("✏️ Source Text (Rubric)", max_chars=800, height=200, value=default_source_text)
-response_text = st.text_area("📝 Response Text", max_chars=800, height=150, placeholder="Summarize the Indus Water Treaty from the information provided in the Rubric above")
+response_text = st.text_area("📝 Response Text", max_chars=800, height=150, placeholder="Summarize the text provided in the Rubric above")
 
 # Evaluation button
 if st.button("🔍 Evaluate"):
