@@ -6,7 +6,7 @@ import json
 import torch
 import re  # Import the regular expression library
 
-st.write(st.secrets)
+# st.write(st.secrets)
 
 # --- Setup and Configuration ---
 st.title("🧠 Response Evaluation Agent")
