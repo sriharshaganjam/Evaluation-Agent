@@ -1,9 +1,12 @@
+import openai
 from openai import OpenAI
 import streamlit as st
 from sentence_transformers import SentenceTransformer, util
 import json
 import torch
 import re  # Import the regular expression library
+
+st.write(st.secrets)
 
 # --- Setup and Configuration ---
 st.title("🧠 Response Evaluation Agent")
@@ -85,7 +88,7 @@ Do not include any conversational elements, creative writing, or information out
 
     try:
         chat_response = openai_client.chat.completions.create(
-            model="mistral-tiny",
+            model="mistral-small-latest",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.2,
             max_tokens=500,
